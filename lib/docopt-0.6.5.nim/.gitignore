@@ -1,0 +1,15 @@
+*
+!.gitignore
+!*.nim
+/*.nim
+!*.nimble
+!*.docopt
+!*.md
+!nim.cfg
+!README*
+!LICENSE
+!/src
+!/src/docopt
+!/test
+!/examples
+!/.travis.yml
