@@ -7,16 +7,29 @@ import neverwinter/erf, neverwinter/resfile, neverwinter/resdir,
 import manifest
 import libshared
 
+import zip/zlib
+
+type CompressionType* {.pure.} = enum None, Zlib
+
 let GobalResTypeSkipList = [getResType("nss")]
 
 proc allowedToExpose(it: ResRef): bool =
   not GobalResTypeSkipList.contains(it.resType)
 
+proc pathForEntry*(manifest: Manifest, rootDirectory, sha1str: string, create: bool): string =
+  result = rootDirectory / "data" / "sha1"
+  for i in 0..<manifest.hashTreeDepth:
+    let pfx = sha1str[i*2..<(i*2+2)]
+    result = result / pfx
+    if create: createDir result
+  result = result / sha1str
+
 proc reindex*(rootDirectory: string,
     entries: seq[string],
     forceWriteIfExists: bool,
     description: string,
-    withModuleContents: bool): string =
+    withModuleContents: bool,
+    compressWith: CompressionType): string =
   ## Reindexes the given module.
 
   if not dirExists(rootDirectory):
@@ -61,7 +74,8 @@ proc reindex*(rootDirectory: string,
 
   let manifest = newManifest()
 
-  var dedupbytes = 0
+  var dedupbytes: BiggestInt = 0
+  var diskbytes: BiggestInt = 0
 
   for idx, resRef in entriesToExpose:
     let res = resman[resRef].get()
@@ -81,16 +95,32 @@ proc reindex*(rootDirectory: string,
 
     else:
       # Not in storage yet, write it to disk.
-      var path = rootDirectory / "data" / "sha1"
-      for i in 0..<manifest.hashTreeDepth:
-        let pfx = sha1str[i*2..<(i*2+2)]
-        path = path / pfx
-        createDir path
+      let path = pathForEntry(manifest, rootDirectory, sha1str, true)
 
-      path = path / sha1str
       let percent = idx div (entriesToExpose.len div 100)
       info "[", percent, "%] Writing: ", path, " (", $resRef, ")"
-      writeFile(path, data)
+
+      let outstr = newFilestream(path, fmWrite)
+
+      case compressWith
+      of CompressionType.Zlib:
+        # compressedbuffer header
+        outstr.write("NSYC")                           # magic
+        outstr.write(uint32 3)                         # version
+        outstr.write(uint32 1)                         # cp1=zlib
+        outstr.write(uint32 data.len)                  # uncompressedSize
+        # zlib header
+        outstr.write(uint32 1)                         # version
+        # payload
+        outstr.write(compress(data, Z_DEFAULT_COMPRESSION, ZLIB_STREAM))
+      of CompressionType.None:
+        # raw file is fastest
+        outstr.write(data)
+
+      outstr.close()
+
+    let path = pathForEntry(manifest, rootDirectory, sha1str, true)
+    diskbytes += getFileSize(path)
 
   doAssert(manifest.entries.len == totalfiles)
 
@@ -115,6 +145,7 @@ proc reindex*(rootDirectory: string,
       "includes_module_contents": withModuleContents,
       "total_files": totalfiles,
       "total_bytes": totalbytes,
+      "on_disk_bytes": diskbytes,
       "created": %int epochTime()
     }) & "\c\L"
 
