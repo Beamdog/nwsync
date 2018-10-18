@@ -1,3 +1,6 @@
 [submodule "lib/neverwinter.nim"]
 	path = lib/neverwinter.nim
 	url = https://github.com/niv/neverwinter.nim
+[submodule "lib/zip"]
+	path = lib/zip
+	url = https://github.com/nim-lang/zip.git
