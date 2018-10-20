@@ -63,7 +63,7 @@ proc reindex*(rootDirectory: string,
 
   var dedupbytes = 0
 
-  for resRef in entriesToExpose:
+  for idx, resRef in entriesToExpose:
     let res = resman[resRef].get()
     let size = res.len
 
@@ -88,7 +88,8 @@ proc reindex*(rootDirectory: string,
         createDir path
 
       path = path / sha1str
-      info "Writing: ", path, " (", $resRef, ")"
+      let percent = idx div (entriesToExpose.len div 100)
+      info "[", percent, "%] Writing: ", path, " (", $resRef, ")"
       writeFile(path, data)
 
   doAssert(manifest.entries.len == totalfiles)
