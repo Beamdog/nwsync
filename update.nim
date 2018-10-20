@@ -34,6 +34,8 @@ Options:
                     a module for full distribution.
                     DO NOT USE THIS FOR PERSISTENT WORLDS.
 
+  --no-latest       Don't update the latest pointer.
+
   --description=D   Add a human-readable description to metadata [default: ]
 
   -h --help         Show this screen.
@@ -56,6 +58,7 @@ import libupdate, libshared
 
 let ForceWriteIfExists = ARGS["-f"]
 let WithModule = ARGS["--with-module"]
+let UpdateLatest = not ARGS["--no-latest"]
 let CompressionType =
   case toLowerAscii($ARGS["--compression"])
   of "none": CompressionType.None
@@ -77,4 +80,5 @@ echo reindex(
   ForceWriteIfExists,
   $ARGS["--description"],
   WithModule,
-  CompressionType)
+  CompressionType,
+  UpdateLatest)

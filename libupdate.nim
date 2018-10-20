@@ -29,13 +29,14 @@ proc reindex*(rootDirectory: string,
     forceWriteIfExists: bool,
     description: string,
     withModuleContents: bool,
-    compressWith: CompressionType): string =
+    compressWith: CompressionType,
+    updateLatest: bool): string =
   ## Reindexes the given module.
 
   if not dirExists(rootDirectory):
     abort "Target sync directory does not exist."
 
-  if fileExists(rootDirectory / "latest"):
+  if updateLatest and fileExists(rootDirectory / "latest"):
     info "Directory already has `latest` manifest, that's OK. Updating!"
 
   createDir(rootDirectory / "manifests")
@@ -131,9 +132,11 @@ proc reindex*(rootDirectory: string,
   let newManifestData = strim.readAll()
   let newManifestSha1 = toLowerAscii($secureHash(newManifestData))
 
-  if fileExists(rootDirectory / "latest"):
-    info "Updating `latest` to point to ", newManifestSha1
-  writefile(rootDirectory / "latest", newManifestSha1)
+  if updateLatest:
+    if fileExists(rootDirectory / "latest"):
+      info "Updating `latest` to point to ", newManifestSha1
+    writefile(rootDirectory / "latest", newManifestSha1)
+
   writeFile(rootDirectory / "manifests" / newManifestSha1, newManifestData)
 
   let retInfo = pretty(%*{
