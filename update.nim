@@ -42,14 +42,25 @@ Options:
   -q                Quiet operation (>= WARN).
 
   -f                Force rewrite of existing data.
+  --compression=T   Compress repostory data. This saves disk space and speeds up
+                    transfers if your webserver does not speak gzip or deflate
+                    compression.
+                    Supported compression types:
+                      * none
+                      * zlib (with the default level)
 """
 
-import logging, sequtils
+import logging, sequtils, strutils
 
 import libupdate, libshared
 
 let ForceWriteIfExists = ARGS["-f"]
 let WithModule = ARGS["--with-module"]
+let CompressionType =
+  case toLowerAscii($ARGS["--compression"])
+  of "none": CompressionType.None
+  of "zlib": CompressionType.Zlib
+  else: quit("Unsupported compression type: " & $ARGS["--compression"])
 
 addHandler newFileLogger(stderr, fmtStr = verboseFmtStr)
 setLogFilter(if ARGS["-v"]: lvlDebug elif ARGS["-q"]: lvlWarn else: lvlInfo)
@@ -60,4 +71,10 @@ let filesToIndex = ARGS["<spec>"].mapIt($it)
 if filesToIndex.len == 0:
   abort "You didn't give me anything to index."
 
-echo reindex(root, filesToIndex, ForceWriteIfExists, $ARGS["--description"], WithModule)
+echo reindex(
+  root,
+  filesToIndex,
+  ForceWriteIfExists,
+  $ARGS["--description"],
+  WithModule,
+  CompressionType)
