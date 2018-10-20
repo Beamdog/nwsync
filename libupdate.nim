@@ -98,7 +98,8 @@ proc reindex*(rootDirectory: string,
       # Not in storage yet, write it to disk.
       let path = pathForEntry(manifest, rootDirectory, sha1str, true)
 
-      let percent = idx div (entriesToExpose.len div 100)
+      let divisor = (entriesToExpose.len div 100)
+      let percent = if divisor > 0: $(idx div divisor) else: "??"
       info "[", percent, "%] Writing: ", path, " (", $resRef, ")"
 
       let outstr = newFilestream(path, fmWrite)
