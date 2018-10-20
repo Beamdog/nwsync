@@ -4,6 +4,26 @@ nwsync update
 This utility creates or updates a serverside http repository
 for nwsync.
 
+<root> is the storage directory into which the repository will
+be written. When starting out, make sure to give a empty
+directory. A <root> can hold multiple manifests.
+
+All given <spec> are added to the manifest in order, with the
+latest coming on top (for purposes of shadowing resources).
+
+After a manifest is written, the repository /latest file is
+updated to point at it. This file is queried by game servers
+if the server admin does not specify a hash to serve explicitly.
+
+<spec> can be:
+
+* a .mod file, which will read the module and add all HAKs and
+  the optional TLK as the game would
+* any valid other erf container (HAK, ERF)
+* single files, including a TLK file
+* a directory containing single files
+
+
 Usage:
   update [options] [--description=D] <root> <spec>...
   update (-h | --help)
