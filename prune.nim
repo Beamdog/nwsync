@@ -29,7 +29,7 @@ import os, osproc, streams, streamext, std/sha1, strutils, logging,
   critbits, sequtils, math, sets
 
 import neverwinter/resref
-import manifest
+import libmanifest
 
 import libshared
 

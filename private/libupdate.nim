@@ -4,7 +4,7 @@ import options, logging, critbits, std/sha1, strutils, sequtils,
 import neverwinter/erf, neverwinter/resfile, neverwinter/resdir,
   neverwinter/gff, neverwinter/resman, neverwinter/key
 
-import manifest
+import libmanifest
 import libshared
 
 import zip/zlib

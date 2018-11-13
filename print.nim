@@ -17,7 +17,7 @@ Options:
 
 import logging, sequtils, streams, strutils, options, os
 
-import libupdate, libshared, manifest, neverwinter/resref
+import libupdate, libshared, libmanifest, neverwinter/resref
 
 addHandler newFileLogger(stderr, fmtStr = verboseFmtStr)
 setLogFilter(if ARGS["-v"]: lvlDebug elif ARGS["-q"]: lvlWarn else: lvlInfo)
