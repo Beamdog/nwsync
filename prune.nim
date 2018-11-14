@@ -41,7 +41,7 @@ setLogFilter(if ARGS["-v"]: lvlDebug elif ARGS["-q"]: lvlWarn else: lvlInfo)
 
 proc act*(hr: varargs[string, `$`], runnable: proc()) =
   if not ARGS["--dry-run"]: runnable()
-  else: info "Dry run: ", hr
+  else: info "Dry run: ", foldl(@hr, a & " " & b)
 
 let root = $ARGS["<root>"]
 
