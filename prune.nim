@@ -5,6 +5,7 @@ This utility will perform housekeeping on a nwsync repository.
 
 It will:
 - Make sure `latest` is a valid pointer, if present.
+- Warns about manifests missing metadata.
 - Prune all data files not contained in any stored manifests.
 - Warn about missing data files.
 - Clean up the directory structure.
@@ -37,11 +38,11 @@ proc isSha1*(candidate: string): bool =
   candidate.len == 40 and candidate.count({'a'..'f', '0'..'9'}) == 40
 
 addHandler newConsoleLogger(fmtStr = verboseFmtStr)
-setLogFilter(if ARGS["-v"]: lvlDebug elif ARGS["-q"]: lvlWarn else: lvlInfo)
+setLogFilter(if ARGS["-v"]: lvlDebug elif ARGS["-q"]: lvlNotice else: lvlInfo)
 
 proc act*(hr: varargs[string, `$`], runnable: proc()) =
   if not ARGS["--dry-run"]: runnable()
-  else: info "Dry run: ", foldl(@hr, a & " " & b)
+  else: notice "Dry run: ", foldl(@hr, a & " " & b)
 
 let root = $ARGS["<root>"]
 
@@ -63,6 +64,11 @@ ensureLatestHeadIsValid(root)
 ### CHECK: look for missing data files
 ### MAINTENANCE: Remove all unreferenced files
 
+proc updateManifestMetaData*(rootDirectory: string, mfh: string, mf: Manifest) =
+  if not fileExists(rootDirectory / "manifests" / mfh & ".json"):
+    error "Manifest ", mfh, " found, but has no accompanying metadata file. ",
+      "You need to fix this manually by re-generating the manifest from source."
+
 proc pruneUnreferencedFiles*(rootDirectory: string) =
   info "Checking for orphaned and missing files"
 
@@ -70,10 +76,15 @@ proc pruneUnreferencedFiles*(rootDirectory: string) =
   info "Loading all manifests (this may take a good while)"
   var manifestsInRepository: CritBitTree[Manifest]
   for pa in walkDir(rootDirectory / "manifests"):
-    if not isSha1(pa.path.extractFilename): continue
     let mfh = pa.path.extractFilename
+
+    if not isSha1(mfh): continue
+
     info "Reading manifest ", mfh
     let mf = readManifest(pa.path)
+
+    updateManifestMetaData(rootDirectory, mfh, mf)
+
     manifestsInRepository[mfh] = mf
     info "Manifest ", mfh,
       " containing ", formatSize(int mf.totalSize()),
@@ -129,3 +140,16 @@ proc pruneEmptyDirectories*(dir: string) =
         act("Would remove directory: ", dir / pc.path) do(): removeDir(dir / pc.path)
 
 pruneEmptyDirectories(root / "data" / "sha1")
+
+### MAINTENANCE: remove all outdated metadata files
+
+proc pruneDanglingMetadata*(rootDirectory: string) =
+  for pa in walkDir(rootDirectory / "manifests"):
+    let sp = pa.path.splitFile
+    if not isSha1(sp.name): continue
+
+    if sp.ext == ".json" and not fileExists(rootDirectory / "manifests" / sp.name):
+      notice "Removing dangling manifest metadata with no manifest: ", sp.name
+      act("Would delete file: ", pa.path) do (): removeFile(pa.path)
+
+pruneDanglingMetadata(root)
