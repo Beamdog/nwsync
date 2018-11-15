@@ -14,7 +14,7 @@ To download the most recent release, click "Releases" and find the newest corres
 
 To build these tools, first install the most recent nim compiler. The suggested way to this is via choosenim: https://github.com/dom96/choosenim
 
-After nim is installed and available on your path, simply clone this repository and type `nimble build`.
+After nim is installed and available on your path, simply clone this repository and type `nimble build -d:release`.
 
 ## Documentation
 
