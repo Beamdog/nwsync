@@ -44,7 +44,7 @@ Options:
   -q                Quiet operation (>= WARN).
 
   -f                Force rewrite of existing data.
-  --compression=T   Compress repostory data. [default: none]
+  --compression=T   Compress repostory data. [default: zlib]
                     This saves disk space and speeds up transfers if your
                     webserver does not speak gzip or deflate compression.
                     Supported compression types:
