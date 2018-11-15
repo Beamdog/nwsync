@@ -1,6 +1,7 @@
 nimcache
 /update
 /prune
+/print
 /wine
 /*.zip
 
