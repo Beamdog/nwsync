@@ -11,7 +11,10 @@ requires "neverwinter >= 1.2.0"
 
 skipExt = @["nim"]
 binDir = "bin"
-bin = @["update", "prune", "print"]
+bin = listFiles(".").
+  mapIt(it.extractFilename()).
+  filterIt(it.startsWith("nwsync_") and it.endsWith(".nim")).
+  mapIt(it.splitFile.name)
 
 task clean, "Remove compiled binaries and temporary data":
   for b in bin: rmFile(binDir / b)
