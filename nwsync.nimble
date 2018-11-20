@@ -11,7 +11,7 @@ requires "neverwinter >= 1.2.0"
 
 skipExt = @["nim"]
 binDir = "bin"
-bin = listFiles(".").
+bin = listFiles(thisDir()).
   mapIt(it.extractFilename()).
   filterIt(it.startsWith("nwsync_") and it.endsWith(".nim")).
   mapIt(it.splitFile.name)
