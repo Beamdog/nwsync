@@ -10,8 +10,9 @@ requires "zip >= 0.2.1"
 requires "neverwinter >= 1.2.0"
 
 skipExt = @["nim"]
+binDir = "bin"
 bin = @["update", "prune", "print"]
 
 task clean, "Remove compiled binaries and temporary data":
   for b in bin: rmFile(binDir / b)
-  rmdir(nimcacheDir())
+  for b in bin: rmFile(binDir / b & ".exe")
