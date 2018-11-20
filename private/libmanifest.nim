@@ -93,6 +93,7 @@ proc readManifest*(io: Stream): Manifest =
   let entryCount = io.readUint32()
   let mappingCount = io.readUint32()
 
+  doAssert(entryCount > 0u, "No entries in manifest. This is not supported.")
   for i in 0..<entryCount:
     let sha1 = SecureHash readArray[20, uint8](io) do -> uint8:
       io.readUInt8()
@@ -103,15 +104,16 @@ proc readManifest*(io: Stream): Manifest =
     let ent = ManifestEntry(sha1: sha1str, size: size, resRef: rr)
     result.entries.add(ent)
 
-  for i in 0..<mappingCount:
-    let index = io.readUint32()
-    let rr = io.readResRef()
+  if mappingCount > 0u:
+    for i in 0..<mappingCount:
+      let index = io.readUint32()
+      let rr = io.readResRef()
 
-    doAssert(index.int >= 0 and index.int < result.entries.len)
-    let mf = result.entries[int index]
+      doAssert(index.int >= 0 and index.int < result.entries.len)
+      let mf = result.entries[int index]
 
-    let ent = ManifestEntry(sha1: mf.sha1, size: mf.size, resRef: rr)
-    result.entries.add(ent)
+      let ent = ManifestEntry(sha1: mf.sha1, size: mf.size, resRef: rr)
+      result.entries.add(ent)
 
 proc readManifest*(file: string): Manifest =
   readManifest(newFileStream(file, fmRead))
