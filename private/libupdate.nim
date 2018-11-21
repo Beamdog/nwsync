@@ -47,7 +47,12 @@ proc reindex*(rootDirectory: string,
   let resman = newResMan(entries, withModuleContents)
 
   info "Preparing data set to expose"
-  let entriesToExpose = toSeq(resman.contents.items).filterIt(allowedToExpose(it))
+  let entriesToExpose = toSeq(resman.contents.items).filter do (it: ResRef) -> bool:
+    if not lookupResExt(it.resType).isSome:
+      error "ResRef ", it, " is not resolvable (we don't know the file type); origin: ",
+        resman[it].get().origin
+      quit(1)
+    allowedToExpose(it)
 
   let totalfiles = entriesToExpose.len
 
