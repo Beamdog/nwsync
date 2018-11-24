@@ -1,5 +1,5 @@
 import docopt; let ARGS = docopt """
-nwsync prune
+nwsync_prune
 
 This utility will perform housekeeping on a nwsync repository.
 
@@ -11,18 +11,17 @@ It will:
 - Clean up the directory structure.
 
 Usage:
-  prune [options] <root>
-  prune (-h | --help)
-  prune --version
+  nwsync_prune [options] <root>
+  nwsync_prune (-h | --help)
+  nwsync_prune --version
 
 Options:
-  -h --help     Show this screen.
-  --version     Show version.
+  -h --help         Show this screen.
+  -V --version      Show version.
+  -v --verbose      Verbose operation (>= DEBUG).
+  -q --quiet        Quiet operation (>= WARN).
 
-  -n --dry-run  Simulate, don't actually do anything.
-
-  -v            Verbose operation (>= DEBUG).
-  -q            Quiet operation (>= WARN).
+  -n --dry-run      Simulate, don't actually do anything.
 """
 
 
@@ -38,7 +37,7 @@ proc isSha1*(candidate: string): bool =
   candidate.len == 40 and candidate.count({'a'..'f', '0'..'9'}) == 40
 
 addHandler newConsoleLogger(fmtStr = verboseFmtStr)
-setLogFilter(if ARGS["-v"]: lvlDebug elif ARGS["-q"]: lvlNotice else: lvlInfo)
+setLogFilter(if ARGS["--verbose"]: lvlDebug elif ARGS["--quiet"]: lvlWarn else: lvlInfo)
 
 proc act*(hr: varargs[string, `$`], runnable: proc()) =
   if not ARGS["--dry-run"]: runnable()

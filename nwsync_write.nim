@@ -1,15 +1,18 @@
 import docopt; let ARGS = docopt """
-nwsync update
+nwsync_write
 
-This utility creates or updates a serverside http repository
-for nwsync.
+This utility creates a new manifest in a serverside nwsync
+repository.
 
-<root> is the storage directory into which the repository will
-be written. When starting out, make sure to give a empty
-directory. A <root> can hold multiple manifests.
+<root> is the storage directory into which the manifest will
+be written. A <root> can hold multiple manifests.
 
 All given <spec> are added to the manifest in order, with the
 latest coming on top (for purposes of shadowing resources).
+
+Each <spec> will be unpacked, hashed, optionally compressed
+and written to the data subdirectory. This process can take a
+long time, so be patient.
 
 After a manifest is written, the repository /latest file is
 updated to point at it. This file is queried by game servers
@@ -25,11 +28,16 @@ if the server admin does not specify a hash to serve explicitly.
 
 
 Usage:
-  update [options] [--description=D] <root> <spec>...
-  update (-h | --help)
-  update --version
+  nwsync_write [options] [--description=D] <root> <spec>...
+  nwsync_write (-h | --help)
+  nwsync_write --version
 
 Options:
+  -h --help         Show this screen.
+  -V --version      Show version.
+  -v --verbose      Verbose operation (>= DEBUG).
+  -q --quiet        Quiet operation (>= WARN).
+
   --with-module     Include module contents. This is only useful when packing up
                     a module for full distribution.
                     DO NOT USE THIS FOR PERSISTENT WORLDS.
@@ -37,11 +45,6 @@ Options:
   --no-latest       Don't update the latest pointer.
 
   --description=D   Add a human-readable description to metadata [default: ]
-
-  -h --help         Show this screen.
-  --version         Show version.
-  -v                Verbose operation (>= DEBUG).
-  -q                Quiet operation (>= WARN).
 
   -f                Force rewrite of existing data.
   --compression=T   Compress repostory data. [default: zlib]
@@ -66,7 +69,7 @@ let CompressionType =
   else: quit("Unsupported compression type: " & $ARGS["--compression"])
 
 addHandler newFileLogger(stderr, fmtStr = verboseFmtStr)
-setLogFilter(if ARGS["-v"]: lvlDebug elif ARGS["-q"]: lvlWarn else: lvlInfo)
+setLogFilter(if ARGS["--verbose"]: lvlDebug elif ARGS["--quiet"]: lvlWarn else: lvlInfo)
 
 let root = $ARGS["<root>"]
 let filesToIndex = ARGS["<spec>"].mapIt($it)

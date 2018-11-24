@@ -1,18 +1,18 @@
 import docopt; let ARGS = docopt """
-nwsync print
+nwsync_print
 
 This utility prints a manifest in human-readable form.
 
 Usage:
-  print [options] <manifest>
-  print (-h | --help)
-  print --version
+  nwsync_print [options] <manifest>
+  nwsync_print (-h | --help)
+  nwsync_print --version
 
 Options:
   -h --help         Show this screen.
-  --version         Show version.
-  -v                Verbose operation (>= DEBUG).
-  -q                Quiet operation (>= WARN).
+  -V --version      Show version.
+  -v --verbose      Verbose operation (>= DEBUG).
+  -q --quiet        Quiet operation (>= WARN).
 """
 
 import logging, sequtils, streams, strutils, options, os
@@ -20,7 +20,7 @@ import logging, sequtils, streams, strutils, options, os
 import libupdate, libshared, libmanifest, neverwinter/resref
 
 addHandler newFileLogger(stderr, fmtStr = verboseFmtStr)
-setLogFilter(if ARGS["-v"]: lvlDebug elif ARGS["-q"]: lvlWarn else: lvlInfo)
+setLogFilter(if ARGS["--verbose"]: lvlDebug elif ARGS["--quiet"]: lvlWarn else: lvlInfo)
 
 doAssert(fileExists($ARGS["<manifest>"]))
 let mf = readManifest(newFileStream($ARGS["<manifest>"], fmRead))
