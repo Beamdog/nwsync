@@ -95,17 +95,19 @@ proc reindex*(rootDirectory: string,
 
     let alreadyWrittenOut = writtenHashes.contains(sha1str)
 
+    let divisor = (entriesToExpose.len / 100)
+    let percent = if divisor > 0: $(clamp(int round(idx.float / divisor), 0, 100)) else: "??"
+    let percentPrefix = "[" & percent & "%] "
+
     if alreadyWrittenOut:
       dedupbytes += size
-      debug "Exists: ", sha1str, " (", $resRef, ")"
+      debug percentPrefix, "Exists: ", sha1str, " (", $resRef, ")"
 
     else:
       # Not in storage yet, write it to disk.
       let path = pathForEntry(manifest, rootDirectory, sha1str, true)
 
-      let divisor = (entriesToExpose.len div 100)
-      let percent = if divisor > 0: $(idx div divisor) else: "??"
-      info "[", percent, "%] Writing: ", path, " (", $resRef, ")"
+      info percentPrefix, "Writing: ", path, " (", $resRef, ")"
 
       let outstr = newFilestream(path, fmWrite)
 
