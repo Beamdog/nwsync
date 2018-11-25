@@ -81,7 +81,8 @@ echo reindex(
   root,
   filesToIndex,
   ForceWriteIfExists,
-  $ARGS["--description"],
   WithModule,
   CompressionType,
-  UpdateLatest)
+  UpdateLatest, [
+    ("description", $ARGS["--description"])
+  ])

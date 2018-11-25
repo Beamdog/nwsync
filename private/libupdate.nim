@@ -27,10 +27,10 @@ proc pathForEntry*(manifest: Manifest, rootDirectory, sha1str: string, create: b
 proc reindex*(rootDirectory: string,
     entries: seq[string],
     forceWriteIfExists: bool,
-    description: string,
     withModuleContents: bool,
     compressWith: CompressionType,
-    updateLatest: bool): string =
+    updateLatest: bool,
+    additionalMeta: openArray[(string, string)]): string =
   ## Reindexes the given module.
 
   if not dirExists(rootDirectory):
@@ -147,18 +147,22 @@ proc reindex*(rootDirectory: string,
 
   writeFile(rootDirectory / "manifests" / newManifestSha1, newManifestData)
 
-  let retInfo = pretty(%*{
-      "version": %int manifest.version,
-      "sha1": %newManifestSha1,
-      "hash_tree_depth": %int manifest.hashTreeDepth,
-      "description": description,
-      "module_name": moduleName,
-      "includes_module_contents": withModuleContents,
-      "total_files": totalfiles,
-      "total_bytes": totalbytes,
-      "on_disk_bytes": diskbytes,
-      "created": %int epochTime()
-    }) & "\c\L"
+  var jdata = %*{
+    "version": %int manifest.version,
+    "sha1": %newManifestSha1,
+    "hash_tree_depth": %int manifest.hashTreeDepth,
+    "module_name": moduleName,
+    "includes_module_contents": withModuleContents,
+    "total_files": totalfiles,
+    "total_bytes": totalbytes,
+    "on_disk_bytes": diskbytes,
+    "created": %int epochTime()
+  }
+
+  for pair in additionalMeta:
+    jdata[pair[0]] = %pair[1]
+
+  let retinfo = pretty(jdata) & "\c\L"
 
   writeFile(rootDirectory / "manifests" / newManifestSha1 & ".json", retinfo)
 
