@@ -36,9 +36,6 @@ proc reindex*(rootDirectory: string,
   if not dirExists(rootDirectory):
     abort "Target sync directory does not exist."
 
-  if updateLatest and fileExists(rootDirectory / "latest"):
-    info "Directory already has `latest` manifest, that's OK. Updating!"
-
   createDir(rootDirectory / "manifests")
   createDir(rootDirectory / "data")
   createDir(rootDirectory / "data" / "sha1")
@@ -143,6 +140,8 @@ proc reindex*(rootDirectory: string,
   if updateLatest:
     if fileExists(rootDirectory / "latest"):
       info "Updating `latest` to point to ", newManifestSha1
+    else:
+      info "Repository has no `latest`, not creating."
     writefile(rootDirectory / "latest", newManifestSha1)
 
   writeFile(rootDirectory / "manifests" / newManifestSha1, newManifestData)
