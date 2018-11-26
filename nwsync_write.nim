@@ -55,6 +55,9 @@ Options:
                       * zlib (with the default level)
 """
 
+from libversion import handleVersion
+if ARGS["--version"]: handleVersion()
+
 import logging, sequtils, strutils
 
 import libupdate, libshared

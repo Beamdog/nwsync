@@ -24,6 +24,8 @@ Options:
   -n --dry-run      Simulate, don't actually do anything.
 """
 
+from libversion import handleVersion
+if ARGS["--version"]: handleVersion()
 
 import os, osproc, streams, streamext, std/sha1, strutils, logging,
   critbits, sequtils, math, sets

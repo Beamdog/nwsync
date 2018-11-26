@@ -15,6 +15,9 @@ Options:
   -q --quiet        Quiet operation (>= WARN).
 """
 
+from libversion import handleVersion
+if ARGS["--version"]: handleVersion()
+
 import logging, sequtils, streams, strutils, options, os
 
 import libupdate, libshared, libmanifest, neverwinter/resref
