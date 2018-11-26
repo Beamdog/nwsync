@@ -61,14 +61,14 @@ proc algorithm*(mf: Manifest): string =
   else:
     raise newException(ValueError, "Unsupported manifest version")
 
-proc totalSize*(mf: Manifest): BiggestInt =
+proc totalSize*(mf: Manifest): int64 =
   ## Total size of manifest in bytes.
-  mf.entries.mapIt(BiggestInt it.size).sum()
+  mf.entries.mapIt(int64 it.size).sum()
 
-proc deduplicatedSize*(mf: Manifest): BiggestInt =
+proc deduplicatedSize*(mf: Manifest): int64 =
   ## Dedup size of manifest.
   let a = mf.entries.mapIt((sha1: it.sha1, size: it.size))
-  a.deduplicate().mapIt(BiggestInt it.size).sum()
+  a.deduplicate().mapIt(int64 it.size).sum()
 
 proc readResRef(io: Stream): ResRef =
   let resref = io.readString(16).strip(leading=false,trailing=true,chars={'\0'}).toLowerAscii

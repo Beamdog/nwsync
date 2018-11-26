@@ -74,14 +74,14 @@ proc reindex*(rootDirectory: string,
   var writtenHashes = getFilesInStorage(rootDirectory)
 
   info "Calculating complete manifest size"
-  let totalbytes = entriesToExpose.mapIt(resman[it].get().len).sum()
+  let totalbytes: int64 = entriesToExpose.mapIt(int64 resman[it].get().len).sum()
   info "Generating data for ", totalfiles, " resrefs, ",
     formatSize(totalbytes), " (This might take a while, we need to checksum it all)"
 
   let manifest = newManifest()
 
-  var dedupbytes: BiggestInt = 0
-  var diskbytes: BiggestInt = 0
+  var dedupbytes: int64 = 0
+  var diskbytes: int64 = 0
 
   for idx, resRef in entriesToExpose:
     let res = resman[resRef].get()
