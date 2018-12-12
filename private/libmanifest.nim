@@ -1,6 +1,6 @@
 import streams, streamext, std/sha1, critbits,
   neverwinter/restype, neverwinter/resref, strutils,
-  algorithm, sequtils, math
+  algorithm, sequtils, math, options
 
 const HashTreeDepth = 2 # this needs to match with the nwn sources
 
@@ -38,6 +38,14 @@ type
     hashTreeDepth: uint32
     entries*: seq[ManifestEntry]
 
+  ManifestError* = object of ValueError
+
+template check(cond: untyped, msg: string) =
+  bind instantiationInfo
+  {.line: instantiationInfo().}:
+    if not cond:
+      raise newException(ManifestError, msg)
+
 proc `$`*(m: ManifestEntry): string =
   format("$1 $2", m.sha1, m.resref)
 
@@ -54,12 +62,12 @@ proc hashTreeDepth*(mf: Manifest): int =
   elif mf.version == 2:
     2
   else:
-    raise newException(ValueError, "Unsupported manifest version")
+    raise newException(ManifestError, "Unsupported manifest version")
 proc algorithm*(mf: Manifest): string =
   if mf.version == Version:
     "SHA1"
   else:
-    raise newException(ValueError, "Unsupported manifest version")
+    raise newException(ManifestError, "Unsupported manifest version")
 
 proc totalSize*(mf: Manifest): int64 =
   ## Total size of manifest in bytes.
@@ -83,23 +91,25 @@ proc readManifest*(io: Stream): Manifest =
   result = newManifest()
 
   let magic = io.readString(4)
-  if magic != "NSYM":
-    raise newException(ValueError, "Not a manifest (invalid magic bytes)")
+  check(magic == "NSYM", "Not a manifest (invalid magic bytes)")
 
   result.version = io.readUint32()
-  if result.version != Version: raise newException(ValueError,
-    "Unsupported manifest version " & $result.version)
+  check(result.version == Version, "Unsupported manifest version " & $result.version)
 
   let entryCount = io.readUint32()
   let mappingCount = io.readUint32()
 
-  doAssert(entryCount > 0u, "No entries in manifest. This is not supported.")
+  check(entryCount > 0u, "No entries in manifest. This is not supported.")
+
   for i in 0..<entryCount:
     let sha1 = SecureHash readArray[20, uint8](io) do -> uint8:
       io.readUInt8()
     let sha1str = toLowerAscii($sha1)
     let size = io.readUint32()
     let rr = io.readResRef()
+
+    check(rr.resolve().isSome, "Entry at position " & $i &
+      " does not resolve to a valid resref: " & escape($rr))
 
     let ent = ManifestEntry(sha1: sha1str, size: size, resRef: rr)
     result.entries.add(ent)
@@ -109,7 +119,9 @@ proc readManifest*(io: Stream): Manifest =
       let index = io.readUint32()
       let rr = io.readResRef()
 
-      doAssert(index.int >= 0 and index.int < result.entries.len)
+      check(index.int >= 0 and index.int < result.entries.len,
+        "Mapping " & $i & " references non-existent entry " & $index)
+
       let mf = result.entries[int index]
 
       let ent = ManifestEntry(sha1: mf.sha1, size: mf.size, resRef: rr)
@@ -119,7 +131,7 @@ proc readManifest*(file: string): Manifest =
   readManifest(newFileStream(file, fmRead))
 
 proc writeManifest*(io: Stream, mf: Manifest) =
-  if mf.version != Version: raise newException(ValueError, "Unsupported manifest version")
+  check(mf.version == Version, "Unsupported manifest version")
 
   # seen sha1sums that have been written to entries.
   # if it's already stored in a entry, we add an (additional) mapping instead.
