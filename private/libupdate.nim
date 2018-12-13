@@ -30,7 +30,8 @@ proc reindex*(rootDirectory: string,
     withModuleContents: bool,
     compressWith: CompressionType,
     updateLatest: bool,
-    additionalMeta: openArray[(string, string)]): string =
+    additionalStringMeta: openArray[(string, string)],
+    additionalIntMeta: openArray[(string, int)]): string =
   ## Reindexes the given module.
 
   if not dirExists(rootDirectory):
@@ -158,8 +159,11 @@ proc reindex*(rootDirectory: string,
     "created": %int epochTime()
   }
 
-  for pair in additionalMeta:
-    jdata[pair[0]] = %pair[1]
+  for pair in additionalStringMeta:
+    if pair[1] != "": jdata[pair[0]] = %pair[1]
+
+  for pair in additionalIntMeta:
+    if pair[1] != 0: jdata[pair[0]] = %pair[1]
 
   let retinfo = pretty(jdata) & "\c\L"
 

@@ -53,6 +53,11 @@ Options:
                     Supported compression types:
                       * none
                       * zlib (with the default level)
+
+  --group-id ID     Set a group ID. Do this if you run multiple data sets
+                    from the same repository. Manifests with the same ID
+                    are considered for auto-removal by clients when
+                    superseded by a newer download. [default: 0]
 """
 
 from libversion import handleVersion
@@ -70,6 +75,7 @@ let CompressionType =
   of "none": CompressionType.None
   of "zlib": CompressionType.Zlib
   else: quit("Unsupported compression type: " & $ARGS["--compression"])
+let GroupId = clamp(parseInt($ARGS["--group-id"]), 0, int32.high)
 
 addHandler newFileLogger(stderr, fmtStr = verboseFmtStr)
 setLogFilter(if ARGS["--verbose"]: lvlDebug elif ARGS["--quiet"]: lvlWarn else: lvlInfo)
@@ -88,4 +94,6 @@ echo reindex(
   CompressionType,
   UpdateLatest, [
     ("description", $ARGS["--description"])
+  ], [
+    ("group_id", GroupId)
   ])
