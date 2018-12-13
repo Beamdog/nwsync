@@ -7,7 +7,7 @@ license       = "MIT"
 
 requires "nim >= 0.19.0"
 requires "zip >= 0.2.1"
-requires "neverwinter >= 1.2.0"
+requires "neverwinter >= 1.2.1"
 
 skipExt = @["nim"]
 binDir = "bin"
