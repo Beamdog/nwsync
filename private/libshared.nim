@@ -51,29 +51,39 @@ proc newResMan*(entries: seq[string], includeModContents: bool): ResMan =
 
         let ifo = erf.demand(newResolvedResRef "module.ifo").readAll(useCache=false)
         let ifogff = readGffRoot(newStringStream(ifo), false)
-        let haklist = ifogff["Mod_HakList", GffList].mapIt(it["Mod_Hak", GffCExoString])
-        let tlk = ifogff["Mod_CustomTlk", GffCExoString]
-        info "Found ", haklist.len, " haks inside .mod"
 
-        # Now we resolve all the mod and hak names from the search path
-        for hak in reversed(haklist):
-          # Lookup path for now is hardcoded to be the basic NWN structure.
-          # We first resolve by hk, then by hak.
-          let paths = [
-            pa.dir / ".." / "hk" / hak & ".hak",
-            pa.dir / ".." / "hak" / hak & ".hak"
-          ].filterIt(it.fileExists)
+        if ifogff.hasField("Mod_HakList", GffList):
+          let haklist = ifogff["Mod_HakList", GffList].mapIt(it["Mod_Hak", GffCExoString])
+          info "Found ", haklist.len, " haks inside .mod"
 
-          if paths.len == 0:
-            raise newException(ValueError, "Cannot resolve hak from mod (not found): " & hak)
-          let erfio = newFileStream(paths[0], fmRead)
-          resman.add readErf(erfio, paths[0])
-          info "Adding hak from mod: ", paths[0]
+          # Now we resolve all the mod and hak names from the search path
+          for hak in reversed(haklist):
+            # Lookup path for now is hardcoded to be the basic NWN structure.
+            # We first resolve by hk, then by hak.
+            let paths = [
+              pa.dir / ".." / "hk" / hak & ".hak",
+              pa.dir / ".." / "hak" / hak & ".hak"
+            ].filterIt(it.fileExists)
+
+            if paths.len == 0:
+              raise newException(ValueError, "Cannot resolve hak from mod (not found): " & hak)
+            let erfio = newFileStream(paths[0], fmRead)
+            resman.add readErf(erfio, paths[0])
+            info "Adding hak from mod: ", paths[0]
+
+        else:
+          info "Module does not contain any HAKs"
+
+        let tlk =
+          if ifogff.hasField("Mod_CustomTlk", GffCExoString): ifogff["Mod_CustomTlk", GffCExoString]
+          else: ""
 
         if tlk != "":
           let tlkloc = pa.dir / ".." / "tlk" / tlk & ".tlk"
           info "Adding tlk from mod: ", tlkloc
           resman.add newResFile(tlkloc)
+        else:
+          info "Module does not contain a TLK"
 
       else:
         info "Adding single file: ", entry
