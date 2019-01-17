@@ -44,7 +44,11 @@ Options:
 
   --no-latest       Don't update the latest pointer.
 
-  --description=D   Add a human-readable description to metadata [default: ]
+  --name=N          Override the visible name. Will extract the module name
+                    if a module is sourced.
+
+  --description=D   Override the visible description. Will extract module
+                    description if a module is sourced.
 
   -f                Force rewrite of existing data.
   --compression=T   Compress repostory data. [default: zlib]
@@ -93,7 +97,8 @@ echo reindex(
   WithModule,
   CompressionType,
   UpdateLatest, [
-    ("description", $ARGS["--description"])
+    ("module_name", if ARGS["--name"]: $ARGS["--name"] else: ""),
+    ("description", if ARGS["--description"]: $ARGS["--description"] else: "")
   ], [
     ("group_id", GroupId)
   ])

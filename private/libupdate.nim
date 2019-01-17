@@ -72,6 +72,7 @@ proc reindex*(rootDirectory: string,
     raise newException(ValueError, "You gave me no files to index (nothing contained)")
 
   var moduleName = ""
+  var moduleDescription = ""
   let ifo = resman["module.ifo"]
   if ifo.isSome:
     let rr = ifo.get()
@@ -81,6 +82,10 @@ proc reindex*(rootDirectory: string,
     if nm.hasKey(0):
       moduleName = nm[0]
       info "Module name: ", moduleName
+
+    let dm = g["Mod_Description", GffCExoLocString].entries
+    if dm.hasKey(0):
+      moduleDescription = dm[0]
 
   info "Reading existing data in storage"
   var writtenHashes = getFilesInStorage(rootDirectory)
@@ -166,6 +171,7 @@ proc reindex*(rootDirectory: string,
     "sha1": %newManifestSha1,
     "hash_tree_depth": %int manifest.hashTreeDepth,
     "module_name": moduleName,
+    "description": moduleDescription,
     "includes_module_contents": withModuleContents,
     "total_files": totalfiles,
     "total_bytes": totalbytes,
