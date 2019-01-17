@@ -16,6 +16,20 @@ let GobalResTypeSkipList = [getResType("nss")]
 proc allowedToExpose(it: ResRef): bool =
   not GobalResTypeSkipList.contains(it.resType)
 
+proc readAndRewrite(res: Res): string =
+  var data = res.readAll(useCache=false)
+
+  if toLowerAscii($res.resRef) == "module.ifo":
+    info "Rewriting module.ifo to strip all HAKs"
+    let ifo = readGffRoot(newStringStream(data), false)
+    ifo.del("Mod_HakList")
+    let outstr = newStringStream()
+    write(outstr, ifo)
+    outstr.setPosition(0)
+    data = outstr.readAll()
+
+  return data
+
 proc pathForEntry*(manifest: Manifest, rootDirectory, sha1str: string, create: bool): string =
   result = rootDirectory / "data" / "sha1"
   for i in 0..<manifest.hashTreeDepth:
@@ -85,7 +99,7 @@ proc reindex*(rootDirectory: string,
     let res = resman[resRef].get()
     let size = res.len
 
-    let data = res.readAll(useCache=false)
+    let data = readAndRewrite(res)
     let sha1 = secureHash(data)
     let sha1str = toLowerAscii($sha1)
 
