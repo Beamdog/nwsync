@@ -87,8 +87,12 @@ proc reindex*(rootDirectory: string,
     if dm.hasKey(0):
       moduleDescription = dm[0]
 
-  info "Reading existing data in storage"
-  var writtenHashes = getFilesInStorage(rootDirectory)
+  var writtenHashes: CritBitTree[string]
+  if forceWriteIfExists:
+    info "Force-Rewrite: Ignoring data in storage"
+  else:
+    info "Reading existing data in storage"
+    writtenHashes = getFilesInStorage(rootDirectory)
 
   info "Calculating complete manifest size"
   let totalbytes: int64 = entriesToExpose.mapIt(int64 resman[it].get().len).sum()
