@@ -1,4 +1,4 @@
-import logging, os, sequtils, strutils, critbits, algorithm
+import logging, os, sequtils, critbits, algorithm
 import neverwinter/resman, neverwinter/resdir, neverwinter/key,
   neverwinter/erf, neverwinter/gff, neverwinter/resfile
 

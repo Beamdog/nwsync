@@ -1,8 +1,7 @@
 import options, logging, critbits, std/sha1, strutils, sequtils,
-  os, ospaths, algorithm, math, times, json, sets, tables
+  os, math, times, json, sets, tables
 
-import neverwinter/erf, neverwinter/resfile, neverwinter/resdir,
-  neverwinter/gff, neverwinter/resman, neverwinter/key
+import neverwinter/gff, neverwinter/resman
 
 import libmanifest
 import libshared
