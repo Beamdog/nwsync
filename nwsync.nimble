@@ -5,7 +5,7 @@ author        = "Bernhard Stöckner <niv@beamdog.com>"
 description   = "NWSync Repository Management utilities"
 license       = "MIT"
 
-requires "nim >= 0.20.2"
+requires "nim >= 1.0.8"
 requires "neverwinter >= 1.3.0"
 
 skipExt = @["nim"]
