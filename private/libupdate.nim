@@ -2,14 +2,11 @@ import options, logging, critbits, std/sha1, strutils, sequtils,
   os, ospaths, algorithm, math, times, json, sets, tables
 
 import neverwinter/erf, neverwinter/resfile, neverwinter/resdir,
-  neverwinter/gff, neverwinter/resman, neverwinter/key
+  neverwinter/gff, neverwinter/resman, neverwinter/key,
+  neverwinter/compressedbuf
 
 import libmanifest
 import libshared
-
-import zip/zlib
-
-type CompressionType* {.pure.} = enum None, Zlib
 
 let GobalResTypeSkipList = [getResType("nss")]
 
@@ -42,7 +39,7 @@ proc reindex*(rootDirectory: string,
     entries: seq[string],
     forceWriteIfExists: bool,
     withModuleContents: bool,
-    compressWith: CompressionType,
+    compressWith: Algorithm,
     updateLatest: bool,
     additionalStringMeta: openArray[(string, string)],
     additionalIntMeta: openArray[(string, int)]): string =
@@ -127,22 +124,7 @@ proc reindex*(rootDirectory: string,
       info percentPrefix, "Writing: ", path, " (", $resRef, ")"
 
       let outstr = newFilestream(path, fmWrite)
-
-      case compressWith
-      of CompressionType.Zlib:
-        # compressedbuffer header
-        outstr.write("NSYC")                           # magic
-        outstr.write(uint32 3)                         # version
-        outstr.write(uint32 1)                         # cp1=zlib
-        outstr.write(uint32 data.len)                  # uncompressedSize
-        # zlib header
-        outstr.write(uint32 1)                         # version
-        # payload
-        outstr.write(compress(data, Z_DEFAULT_COMPRESSION, ZLIB_STREAM))
-      of CompressionType.None:
-        # raw file is fastest
-        outstr.write(data)
-
+      compress(outstr, data, compressWith, makeMagic("NSYC"))
       outstr.close()
 
     let path = pathForEntry(manifest, rootDirectory, sha1str, true)

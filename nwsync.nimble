@@ -6,8 +6,7 @@ description   = "NWSync Repository Management utilities"
 license       = "MIT"
 
 requires "nim >= 0.20.2"
-requires "zip >= 0.2.1"
-requires "neverwinter >= 1.2.10"
+requires "neverwinter >= 1.3.0"
 
 skipExt = @["nim"]
 binDir = "bin"

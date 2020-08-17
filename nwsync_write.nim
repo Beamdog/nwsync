@@ -51,12 +51,13 @@ Options:
                     description if a module is sourced.
 
   -f                Force rewrite of existing data.
-  --compression=T   Compress repostory data. [default: zlib]
+  --compression=T   Compress repostory data. [default: zstd]
                     This saves disk space and speeds up transfers if your
                     webserver does not speak gzip or deflate compression.
                     Supported compression types:
                       * none
-                      * zlib (with the default level)
+                      * zlib (with the default level) - DEPRECATED
+                      * zstd (with the default level)
 
   --group-id ID     Set a group ID. Do this if you run multiple data sets
                     from the same repository. Manifests with the same ID
@@ -70,15 +71,12 @@ if ARGS["--version"]: handleVersion()
 import logging, sequtils, strutils
 
 import libupdate, libshared
+import neverwinter/compressedbuf
 
 let ForceWriteIfExists = ARGS["-f"]
 let WithModule = ARGS["--with-module"]
 let UpdateLatest = not ARGS["--no-latest"]
-let CompressionType =
-  case toLowerAscii($ARGS["--compression"])
-  of "none": CompressionType.None
-  of "zlib": CompressionType.Zlib
-  else: quit("Unsupported compression type: " & $ARGS["--compression"])
+let CompressionType = parseEnum[Algorithm]($ARGS["--compression"])
 let GroupId = clamp(parseInt($ARGS["--group-id"]), 0, int32.high)
 
 addHandler newFileLogger(stderr, fmtStr = verboseFmtStr)
