@@ -97,8 +97,13 @@ proc reindex*(rootDirectory: string,
   var dedupbytes: int64 = 0
   var diskbytes: int64 = 0
 
+  var origins = initTable[string, seq[string]]()
+
   for idx, resRef in entriesToExpose:
     let res = resman[resRef].get()
+    if not origins.hasKey($res.origin):
+      origins[$res.origin] = newSeq[string]()
+    origins[$res.origin].add($resRef)
     let size = res.len
 
     let data = readAndRewrite(res)
@@ -138,6 +143,14 @@ proc reindex*(rootDirectory: string,
   strim.setPosition(0)
   let newManifestData = strim.readAll()
   let newManifestSha1 = toLowerAscii($secureHash(newManifestData))
+
+  info "Writing origin metadata"
+  let originmeta = newFileStream(rootDirectory / "manifests" / newManifestSha1 & ".origin", fmWrite)
+  for origin, entries in origins:
+    originmeta.write(origin, "\n")
+    for entry in sorted(entries):
+      originmeta.write("\t", entry, "\n")
+  originmeta.close()
 
   if updateLatest:
     if fileExists(rootDirectory / "latest"):
