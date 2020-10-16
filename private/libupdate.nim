@@ -93,7 +93,7 @@ proc reindex*(rootDirectory: string,
   info "Checking for files that are too large"
   let allFileSize = entriesToExpose.mapIt(int64 resman[it].get().len)
   if allFileSize.max() >= 15728640:
-    raise newException(ValueError, "You have a resource that is greater than 15MB in size which the client is unable download")
+    raise newException(ValueError, "You have a resource that is greater than 15MB in size which the client is unable to download")
 
   info "Calculating complete manifest size"
   let totalbytes = allFileSize.sum()
