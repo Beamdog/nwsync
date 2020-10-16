@@ -90,8 +90,13 @@ proc reindex*(rootDirectory: string,
   info "Reading existing data in storage"
   var writtenHashes = getFilesInStorage(rootDirectory)
 
+  info "Checking for files that are too large"
+  let allFileSize = entriesToExpose.mapIt(int64 resman[it].get().len)
+  if allFileSize.max() >= 15728640:
+    raise newException(ValueError, "You have a resource that is greater than 15MB in size which the client is unable download")
+
   info "Calculating complete manifest size"
-  let totalbytes: int64 = entriesToExpose.mapIt(int64 resman[it].get().len).sum()
+  let totalbytes = allFileSize.sum()
   info "Generating data for ", totalfiles, " resrefs, ",
     formatSize(totalbytes), " (This might take a while, we need to checksum it all)"
 
