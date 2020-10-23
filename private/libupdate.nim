@@ -8,6 +8,9 @@ import neverwinter/erf, neverwinter/resfile, neverwinter/resdir,
 import libmanifest
 import libshared
 
+type Limits* = tuple
+  fileSize: uint64
+
 let GobalResTypeSkipList = [getResType("nss")]
 
 proc allowedToExpose(it: ResRef): bool =
@@ -42,7 +45,8 @@ proc reindex*(rootDirectory: string,
     compressWith: Algorithm,
     updateLatest: bool,
     additionalStringMeta: openArray[(string, string)],
-    additionalIntMeta: openArray[(string, int)]): string =
+    additionalIntMeta: openArray[(string, int)],
+    limits: Limits): string =
   ## Reindexes the given module.
 
   if not dirExists(rootDirectory):
@@ -67,6 +71,17 @@ proc reindex*(rootDirectory: string,
 
   if totalfiles == 0:
     raise newException(ValueError, "You gave me no files to index (nothing contained)")
+
+  var filesTooBig = newSeq[(string, uint64)]()
+  for r in entriesToExpose:
+    let rr = resman[r].get()
+    let sz = rr.len().uint64
+    if sz > limits.fileSize:
+      filesTooBig.add(($rr, sz))
+  for ftb in filesTooBig:
+    error ftb[0], " exceeds configured file limit: ",
+      formatSize(ftb[1].int64), " > ", formatSize(limits.fileSize.int64)
+  if filesTooBig.len > 0: quit(1)
 
   var moduleName = ""
   var moduleDescription = ""

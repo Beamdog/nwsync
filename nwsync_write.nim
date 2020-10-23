@@ -33,36 +33,38 @@ Usage:
   nwsync_write --version
 
 Options:
-  -h --help         Show this screen.
-  -V --version      Show version.
-  -v --verbose      Verbose operation (>= DEBUG).
-  -q --quiet        Quiet operation (>= WARN).
+  -h --help              Show this screen.
+  -V --version           Show version.
+  -v --verbose           Verbose operation (>= DEBUG).
+  -q --quiet             Quiet operation (>= WARN).
 
-  --with-module     Include module contents. This is only useful when packing up
-                    a module for full distribution.
-                    DO NOT USE THIS FOR PERSISTENT WORLDS.
+  --with-module          Include module contents. This is only useful when packing up
+                         a module for full distribution.
+                         DO NOT USE THIS FOR PERSISTENT WORLDS.
 
-  --no-latest       Don't update the latest pointer.
+  --no-latest            Don't update the latest pointer.
 
-  --name=N          Override the visible name. Will extract the module name
-                    if a module is sourced.
+  --name=N               Override the visible name. Will extract the module name
+                         if a module is sourced.
 
-  --description=D   Override the visible description. Will extract module
-                    description if a module is sourced.
+  --description=D        Override the visible description. Will extract module
+                         description if a module is sourced.
 
-  -f                Force rewrite of existing data.
-  --compression=T   Compress repostory data. [default: zstd]
-                    This saves disk space and speeds up transfers if your
-                    webserver does not speak gzip or deflate compression.
-                    Supported compression types:
-                      * none
-                      * zlib (with the default level) - DEPRECATED
-                      * zstd (with the default level)
+  -f                     Force rewrite of existing data.
+  --compression=T        Compress repostory data. [default: zstd]
+                         This saves disk space and speeds up transfers if your
+                         webserver does not speak gzip or deflate compression.
+                         Supported compression types:
+                           * none
+                           * zlib (with the default level) - DEPRECATED
+                           * zstd (with the default level)
 
-  --group-id ID     Set a group ID. Do this if you run multiple data sets
-                    from the same repository. Manifests with the same ID
-                    are considered for auto-removal by clients when
-                    superseded by a newer download. [default: 0]
+  --group-id ID          Set a group ID. Do this if you run multiple data sets
+                         from the same repository. Manifests with the same ID
+                         are considered for auto-removal by clients when
+                         superseded by a newer download. [default: 0]
+  --limit-file-size MB   Error out if any file in the manifest written would
+                         exceed the stated limit (in megabytes). [default: 15]
 """
 
 from libversion import handleVersion
@@ -99,4 +101,5 @@ echo reindex(
     ("description", if ARGS["--description"]: $ARGS["--description"] else: "")
   ], [
     ("group_id", GroupId)
-  ])
+  ],
+  (fileSize: parseInt($ARGS["--limit-file-size"]).uint64 * 1024 * 1024))
