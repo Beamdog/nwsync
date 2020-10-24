@@ -1,19 +1,19 @@
-import parsecfg, streams, strutils
+import os, strutils, parsecfg, streams
 
-const licenceFile = slurp("../LICENCE")
-const nimbleFile = slurp("../nwsync.nimble")
-const buildGitHash = staticExec("git rev-parse --short HEAD")
+const Nimble: string   = slurp(currentSourcePath().splitFile().dir & "/../nwsync.nimble")
+const Template: string = slurp(currentSourcePath().splitFile().dir & "/../VERSION").strip
+const Licence: string  = slurp(currentSourcePath().splitFile().dir & "/../LICENCE").strip
 
-let cfg = loadConfig(newStringStream(nimbleFile), "nwsync.nimble")
+const GitBranch*: string = staticExec("git symbolic-ref -q --short HEAD").strip
+const GitRev*: string    = staticExec("git rev-parse HEAD").strip
 
-proc getGitHash(): string = buildGitHash
-
-proc getVersion(): string = getSectionValue(cfg, "", "version").strip()
-
-proc getLicenceText(): string = licenceFile.strip()
+let nimbleConfig        = loadConfig(newStringStream(Nimble))
+let PackageVersion*     = nimbleConfig.getSectionValue("", "version")
+let PackageDescription* = nimbleConfig.getSectionValue("", "description")
+let VersionString*  = "nwsync " & PackageVersion & " (" & GitBranch & "/" & GitRev[0..5] & ", nim " & NimVersion & ")"
 
 proc handleVersion*() =
-  echo getVersion(), ", git: ", getGitHash()
-  echo ""
-  echo getLicenceText()
-  quit()
+  echo Template.
+       replace("$LICENCE", Licence).
+       replace("$VERSION", VersionString)
+  quit(0)
