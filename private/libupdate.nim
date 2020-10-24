@@ -7,6 +7,7 @@ import neverwinter/erf, neverwinter/resfile, neverwinter/resdir,
 
 import libmanifest
 import libshared
+import libversion
 
 type Limits* = tuple
   fileSize: uint64
@@ -192,7 +193,8 @@ proc reindex*(rootDirectory: string,
     "total_files": totalfiles,
     "total_bytes": totalbytes,
     "on_disk_bytes": diskbytes,
-    "created": %int epochTime()
+    "created": %int epochTime(),
+    "created_with": "nwsync.nim " & VersionString
   }
 
   for pair in additionalStringMeta:
