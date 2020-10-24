@@ -46,7 +46,8 @@ proc reindex*(rootDirectory: string,
     updateLatest: bool,
     additionalStringMeta: openArray[(string, string)],
     additionalIntMeta: openArray[(string, int)],
-    limits: Limits): string =
+    limits: Limits,
+    writeOrigins: bool): string =
   ## Reindexes the given module.
 
   if not dirExists(rootDirectory):
@@ -159,13 +160,14 @@ proc reindex*(rootDirectory: string,
   let newManifestData = strim.readAll()
   let newManifestSha1 = toLowerAscii($secureHash(newManifestData))
 
-  info "Writing origin metadata"
-  let originmeta = newFileStream(rootDirectory / "manifests" / newManifestSha1 & ".origin", fmWrite)
-  for origin, entries in origins:
-    originmeta.write(origin, "\n")
-    for entry in sorted(entries):
-      originmeta.write("\t", entry, "\n")
-  originmeta.close()
+  if writeOrigins:
+    info "Writing origin metadata"
+    let originmeta = newFileStream(rootDirectory / "manifests" / newManifestSha1 & ".origin", fmWrite)
+    for origin, entries in origins:
+      originmeta.write(origin, "\n")
+      for entry in sorted(entries):
+        originmeta.write("\t", entry, "\n")
+    originmeta.close()
 
   if updateLatest:
     if fileExists(rootDirectory / "latest"):

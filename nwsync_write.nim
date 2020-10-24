@@ -63,8 +63,12 @@ Options:
                          from the same repository. Manifests with the same ID
                          are considered for auto-removal by clients when
                          superseded by a newer download. [default: 0]
+
   --limit-file-size MB   Error out if any file in the manifest written would
                          exceed the stated limit (in megabytes). [default: 15]
+
+  --write-origins        Write out .origins file, which can be used to reconstruct
+                         the hak structure from a NWSync manifest.
 """
 
 from libversion import handleVersion
@@ -102,4 +106,5 @@ echo reindex(
   ], [
     ("group_id", GroupId)
   ],
-  (fileSize: parseInt($ARGS["--limit-file-size"]).uint64 * 1024 * 1024))
+  (fileSize: parseInt($ARGS["--limit-file-size"]).uint64 * 1024 * 1024),
+  ARGS["--write-origins"])
