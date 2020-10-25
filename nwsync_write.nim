@@ -82,7 +82,7 @@ import neverwinter/compressedbuf
 let ForceWriteIfExists = ARGS["-f"]
 let WithModule = ARGS["--with-module"]
 let UpdateLatest = not ARGS["--no-latest"]
-let CompressionType = parseEnum[Algorithm]($ARGS["--compression"])
+let CompressionType = parseEnum[Algorithm](($ARGS["--compression"]).capitalizeAscii)
 let GroupId = clamp(parseInt($ARGS["--group-id"]), 0, int32.high)
 
 addHandler newFileLogger(stderr, fmtStr = verboseFmtStr)
