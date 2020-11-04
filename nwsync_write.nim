@@ -1,3 +1,5 @@
+import neverwinter/compressedbuf
+
 import docopt; let ARGS = docopt """
 nwsync_write
 
@@ -54,10 +56,7 @@ Options:
   --compression=T        Compress repostory data. [default: zstd]
                          This saves disk space and speeds up transfers if your
                          webserver does not speak gzip or deflate compression.
-                         Supported compression types:
-                           * none
-                           * zlib (with the default level) - DEPRECATED
-                           * zstd (with the default level)
+                         Supported compression types: """ & SupportedAlgorithms & """
 
   --group-id ID          Set a group ID. Do this if you run multiple data sets
                          from the same repository. Manifests with the same ID
@@ -77,7 +76,6 @@ if ARGS["--version"]: handleVersion()
 import logging, sequtils, strutils
 
 import libupdate, libshared
-import neverwinter/compressedbuf
 
 let ForceWriteIfExists = ARGS["-f"]
 let WithModule = ARGS["--with-module"]
