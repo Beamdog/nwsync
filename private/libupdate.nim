@@ -1,9 +1,7 @@
 import options, logging, critbits, std/sha1, strutils, sequtils,
-  os, ospaths, algorithm, math, times, json, sets, tables
+  os, algorithm, math, times, json, sets, tables
 
-import neverwinter/erf, neverwinter/resfile, neverwinter/resdir,
-  neverwinter/gff, neverwinter/resman, neverwinter/key,
-  neverwinter/compressedbuf
+import neverwinter/gff, neverwinter/resman, neverwinter/compressedbuf
 
 import libmanifest
 import libshared
@@ -77,7 +75,7 @@ proc reindex*(rootDirectory: string,
   var filesTooBig = newSeq[(string, uint64)]()
   for r in entriesToExpose:
     let rr = resman[r].get()
-    let sz = rr.len().uint64
+    let sz = rr.ioSize().uint64
     if sz > limits.fileSize:
       filesTooBig.add(($rr, sz))
   for ftb in filesTooBig:
@@ -109,7 +107,7 @@ proc reindex*(rootDirectory: string,
     writtenHashes = getFilesInStorage(rootDirectory)
 
   info "Calculating complete manifest size"
-  let totalbytes: int64 = entriesToExpose.mapIt(int64 resman[it].get().len).sum()
+  let totalbytes: int64 = entriesToExpose.mapIt(int64 resman[it].get().ioSize).sum()
   info "Generating data for ", totalfiles, " resrefs, ",
     formatSize(totalbytes), " (This might take a while, we need to checksum it all)"
 
@@ -122,10 +120,10 @@ proc reindex*(rootDirectory: string,
 
   for idx, resRef in entriesToExpose:
     let res = resman[resRef].get()
-    if not origins.hasKey($res.origin):
-      origins[$res.origin] = newSeq[string]()
-    origins[$res.origin].add($resRef)
-    let size = res.len
+    if not origins.hasKey($res.origin.container):
+      origins[$res.origin.container] = newSeq[string]()
+    origins[$res.origin.container].add($resRef)
+    let size = res.ioSize
 
     let data = readAndRewrite(res)
     let sha1 = secureHash(data)
