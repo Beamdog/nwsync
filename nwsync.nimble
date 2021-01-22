@@ -1,12 +1,12 @@
 import sequtils, ospaths, strutils
 
-version       = "0.3.1"
+version       = "0.3.2"
 author        = "Bernhard Stöckner <niv@beamdog.com>"
 description   = "NWSync Repository Management utilities"
 license       = "MIT"
 
 requires "nim >= 1.0.8"
-requires "neverwinter >= 1.4.1"
+requires "neverwinter >= 1.4.2"
 
 skipExt = @["nim"]
 binDir = "bin"
