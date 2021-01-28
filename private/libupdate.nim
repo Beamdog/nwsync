@@ -10,18 +10,34 @@ import libversion
 type Limits* = tuple
   fileSize: uint64
 
+type WithModuleContents* = tuple
+  enabled: bool
+  uuid: string
+
+proc validUUIDv4*(uuid: string): bool =
+  uuid.len == 36 and
+    count(uuid, {'a'..'f','0'..'9'}) == 32 and
+    count(uuid, '-') == 4 and
+    uuid[8] == '-' and
+    uuid[13] == '-' and
+    uuid[18] == '-' and
+    uuid[23] == '-' and
+    uuid[14] == '4'
+
 let GobalResTypeSkipList = [getResType("nss")]
 
 proc allowedToExpose(it: ResRef): bool =
   not GobalResTypeSkipList.contains(it.resType)
 
-proc readAndRewrite(res: Res): string =
+proc readAndRewrite(res: Res, uuid: string): string =
   var data = res.readAll(useCache=false)
+  # TODO: Close the file, we won't need it ever again this run.
 
   if toLowerAscii($res.resRef) == "module.ifo":
-    info "Rewriting module.ifo to strip all HAKs"
+    info "Rewriting module.ifo to strip all HAKs, UUID=", uuid
     let ifo = readGffRoot(newStringStream(data), false)
     ifo.del("Mod_HakList")
+    ifo["Mod_UUID", GffCExoString] = uuid
     let outstr = newStringStream()
     write(outstr, ifo)
     outstr.setPosition(0)
@@ -40,7 +56,7 @@ proc pathForEntry*(manifest: Manifest, rootDirectory, sha1str: string, create: b
 proc reindex*(rootDirectory: string,
     entries: seq[string],
     forceWriteIfExists: bool,
-    withModuleContents: bool,
+    withModuleContents: WithModuleContents,
     compressWith: Algorithm,
     updateLatest: bool,
     additionalStringMeta: openArray[(string, string)],
@@ -57,7 +73,7 @@ proc reindex*(rootDirectory: string,
   createDir(rootDirectory / "data" / "sha1")
 
   info "Reindexing"
-  let resman = newResMan(entries, withModuleContents)
+  let resman = newResMan(entries, withModuleContents.enabled)
 
   info "Preparing data set to expose"
   let entriesToExpose = toSeq(resman.contents.items).filter do (it: ResRef) -> bool:
@@ -83,6 +99,7 @@ proc reindex*(rootDirectory: string,
       formatSize(ftb[1].int64), " > ", formatSize(limits.fileSize.int64)
   if filesTooBig.len > 0: quit(1)
 
+  var moduleUUID = ""
   var moduleName = ""
   var moduleDescription = ""
   let ifo = resman["module.ifo"]
@@ -98,6 +115,29 @@ proc reindex*(rootDirectory: string,
     let dm = g["Mod_Description", GffCExoLocString].entries
     if dm.hasKey(0):
       moduleDescription = dm[0]
+
+    if withModuleContents.enabled:
+      if not g.hasField("UUID", GffCExoString) and withModuleContents.uuid == "":
+        fatal "UUID not stored in module. Please generate a valid UUIDv4 and pass it explicitly."
+        fatal "Then set it in the toolset when saving the module again."
+        fatal "MAKE SURE THE UUID DOES NOT CHANGE."
+        quit(1)
+
+      elif g.hasField("UUID", GffCExoString):
+        moduleUUID = g["UUID", GffCExoString]
+
+        if withModuleContents.uuid != "" and moduleUUID != withModuleContents.uuid:
+          fatal "You specified a different UUID to what is embedded in the module:"
+          fatal " Module: ", moduleUUID
+          fatal " You:    ", withModuleContents.uuid
+          quit(1)
+
+      else:
+        moduleUUID = withModuleContents.uuid
+
+      if not validUUIDv4(moduleUUID):
+        fatal "Not a valid UUIDv4: ", moduleUUID
+        quit(1)
 
   var writtenHashes: CritBitTree[string]
   if forceWriteIfExists:
@@ -125,7 +165,7 @@ proc reindex*(rootDirectory: string,
     origins[$res.origin.container].add($resRef)
     let size = res.ioSize
 
-    let data = readAndRewrite(res)
+    let data = readAndRewrite(res, moduleUUID)
     let sha1 = secureHash(data)
     let sha1str = toLowerAscii($sha1)
 
@@ -187,13 +227,16 @@ proc reindex*(rootDirectory: string,
     "hash_tree_depth": %int manifest.hashTreeDepth,
     "module_name": moduleName,
     "description": moduleDescription,
-    "includes_module_contents": withModuleContents,
+    "includes_module_contents": withModuleContents.enabled,
     "total_files": totalfiles,
     "total_bytes": totalbytes,
     "on_disk_bytes": diskbytes,
     "created": %int epochTime(),
     "created_with": "nwsync.nim " & VersionString
   }
+
+  if withModuleContents.enabled:
+    jdata["uuid"] = %moduleUUID
 
   for pair in additionalStringMeta:
     if pair[1] != "": jdata[pair[0]] = %pair[1]

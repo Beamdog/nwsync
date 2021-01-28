@@ -44,6 +44,9 @@ Options:
                          a module for full distribution.
                          DO NOT USE THIS FOR PERSISTENT WORLDS.
 
+When running --with-module:
+  --mod-uuid=UUID        The module UUID to save. Required if the module does not
+                         have a UUID. Must be a UUIDv4.
   --no-latest            Don't update the latest pointer.
 
   --name=N               Override the visible name. Will extract the module name
@@ -58,7 +61,7 @@ Options:
                          webserver does not speak gzip or deflate compression.
                          Supported compression types: """ & SupportedAlgorithms & """
 
-  --group-id ID          Set a group ID. Do this if you run multiple data sets
+  --group-id ID          Set a group ID. Do this if you run multiple servers
                          from the same repository. Manifests with the same ID
                          are considered for auto-removal by clients when
                          superseded by a newer download. [default: 0]
@@ -78,7 +81,11 @@ import logging, sequtils, strutils
 import libupdate, libshared
 
 let ForceWriteIfExists = ARGS["-f"]
-let WithModule = ARGS["--with-module"]
+
+var withModuleContents: WithModuleContents
+withModuleContents.enabled = ARGS["--with-module"]
+withModuleContents.uuid    = if ARGS["--mod-uuid"]: $ARGS["--mod-uuid"] else: ""
+
 let UpdateLatest = not ARGS["--no-latest"]
 let CompressionType = parseEnum[Algorithm](($ARGS["--compression"]).capitalizeAscii)
 let GroupId = clamp(parseInt($ARGS["--group-id"]), 0, int32.high)
@@ -96,7 +103,7 @@ echo reindex(
   root,
   filesToIndex,
   ForceWriteIfExists,
-  WithModule,
+  withModuleContents,
   CompressionType,
   UpdateLatest, [
     ("module_name", if ARGS["--name"]: $ARGS["--name"] else: ""),
