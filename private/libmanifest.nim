@@ -128,7 +128,7 @@ proc readManifest*(io: Stream): Manifest =
       result.entries.add(ent)
 
 proc readManifest*(file: string): Manifest =
-  readManifest(newFileStream(file, fmRead))
+  readManifest(openFileStream(file, fmRead))
 
 proc writeManifest*(io: Stream, mf: Manifest) =
   check(mf.version == Version, "Unsupported manifest version")
@@ -178,6 +178,6 @@ proc writeManifest*(io: Stream, mf: Manifest) =
   io.write mappingIo.readAll()
 
 proc writeManifest*(file: string, mf: Manifest) =
-  writeManifest(newFileStream(file, fmWrite), mf)
+  writeManifest(openFileStream(file, fmWrite), mf)
 
 doAssert(sizeof(SecureHash) == 20)

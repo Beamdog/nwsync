@@ -27,14 +27,14 @@ proc newResMan*(entries: seq[string], includeModContents: bool): ResMan =
 
     elif isFile:
       # let pa = splitPath(entry)
-      let fs = newFileStream(entry, fmRead)
+      let fs = openFileStream(entry, fmRead)
       let hdr = fs.peekStr(3)
 
       if hdr == "KEY":
         info "Adding key: ", entry
         resman.add readKeyTable(fs, entry) do (fn: string) -> Stream:
           info "  Adding bif: ", fn, " at ", pa.dir
-          result = newFileStream(pa.dir / ".." / fn, fmRead)
+          result = openFileStream(pa.dir / ".." / fn, fmRead)
           doAssert(not isNil result)
 
       elif hdr == "ERF" or hdr == "HAK":
@@ -67,7 +67,7 @@ proc newResMan*(entries: seq[string], includeModContents: bool): ResMan =
 
             if paths.len == 0:
               raise newException(ValueError, "Cannot resolve hak from mod (not found): " & hak)
-            let erfio = newFileStream(paths[0], fmRead)
+            let erfio = openFileStream(paths[0], fmRead)
             resman.add readErf(erfio, paths[0])
             info "Adding hak from mod: ", paths[0]
 

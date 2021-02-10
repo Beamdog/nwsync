@@ -147,7 +147,7 @@ proc reindex*(rootDirectory: string,
 
       info percentPrefix, "Writing: ", path, " (", $resRef, ")"
 
-      let outstr = newFilestream(path, fmWrite)
+      let outstr = openFileStream(path, fmWrite)
       compress(outstr, data, compressWith, makeMagic("NSYC"))
       outstr.close()
 
@@ -165,7 +165,7 @@ proc reindex*(rootDirectory: string,
 
   if writeOrigins:
     info "Writing origin metadata"
-    let originmeta = newFileStream(rootDirectory / "manifests" / newManifestSha1 & ".origin", fmWrite)
+    let originmeta = openFileStream(rootDirectory / "manifests" / newManifestSha1 & ".origin", fmWrite)
     for origin, entries in origins:
       originmeta.write(origin, "\n")
       for entry in sorted(entries):
