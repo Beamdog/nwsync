@@ -62,7 +62,9 @@ proc newResMan*(entries: seq[string], includeModContents: bool): ResMan =
             # We first resolve by hk, then by hak.
             let paths = [
               pa.dir / ".." / "hk" / hak & ".hak",
-              pa.dir / ".." / "hak" / hak & ".hak"
+              pa.dir / ".." / "hak" / hak & ".hak",
+              # We also add the current working dir for convenience
+              pa.dir / hak & ".hak",
             ].filterIt(it.fileExists)
 
             if paths.len == 0:
@@ -79,9 +81,16 @@ proc newResMan*(entries: seq[string], includeModContents: bool): ResMan =
           else: ""
 
         if tlk != "":
-          let tlkloc = pa.dir / ".." / "tlk" / tlk & ".tlk"
-          info "Adding tlk from mod: ", tlkloc
-          resman.add newResFile(tlkloc)
+          let paths = [
+            pa.dir / ".." / "tlk" / tlk & ".tlk",
+            pa.dir / tlk & ".tlk"
+          ].filterIt(it.fileExists)
+
+          if paths.len == 0:
+            raise newException(ValueError, "Cannot resolve tlk from mod (not found): " & tlk)
+
+          info "Adding tlk from mod: ", paths[0]
+          resman.add newResFile(paths[0])
         else:
           info "Module does not contain a TLK"
 
