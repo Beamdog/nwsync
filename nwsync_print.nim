@@ -18,9 +18,9 @@ Options:
 from libversion import handleVersion
 if ARGS["--version"]: handleVersion()
 
-import logging, sequtils, streams, strutils, options, os
+import logging, streams, strutils, options, os
 
-import libupdate, libshared, libmanifest, neverwinter/resref
+import libmanifest, neverwinter/resref
 
 addHandler newFileLogger(stderr, fmtStr = verboseFmtStr)
 setLogFilter(if ARGS["--verbose"]: lvlDebug elif ARGS["--quiet"]: lvlWarn else: lvlInfo)

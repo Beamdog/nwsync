@@ -27,8 +27,7 @@ Options:
 from libversion import handleVersion
 if ARGS["--version"]: handleVersion()
 
-import os, osproc, streams, streamext, std/sha1, strutils, logging,
-  critbits, sequtils, math, sets
+import os,streams, strutils, logging, critbits, sequtils, sets
 
 import neverwinter/resref
 import libmanifest
@@ -103,11 +102,11 @@ proc pruneUnreferencedFiles*(rootDirectory: string) =
         referenced[entryHash] = newTree
       referenced[entryHash].incl(mfh)
 
-  let referencedHashes = toSet toSeq referenced.keys
+  let referencedHashes = toHashSet toSeq referenced.keys
   info "Found ", referenced.len, " referenced files in all manifests"
 
   let inStorage = getFilesInStorage(rootDirectory)
-  let inStorageHashes = toSet toSeq inStorage.keys
+  let inStorageHashes = toHashSet toSeq inStorage.keys
   info "Found ", inStorage.len, " files in storage"
 
   let orphans = inStorageHashes - referencedHashes
