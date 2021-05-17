@@ -1,5 +1,5 @@
 nimcache
 /bin/
 /*.zip
-!nwsync_*.nim
 nwsync_*
+!nwsync_*.nim
