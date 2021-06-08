@@ -26,6 +26,33 @@ proc validUUIDv4*(uuid: string): bool =
 
 let GobalResTypeSkipList = [getResType("nss")]
 
+# Restypes that are loaded only on the server side.
+# All other restypes are considered to also be needed on the client.
+let GlobalResTypeServerList = [
+  getResType("are"),
+  getResType("dlg"),
+  getResType("fac"),
+  getResType("gic"),
+  getResType("git"),
+  getResType("ifo"),
+  getResType("itp"),
+  getResType("jrl"),
+  getResType("ncs"),
+  getResType("ndb"),
+  getResType("nss"),
+  getResType("ptm"),
+  getResType("utc"),
+  getResType("utd"),
+  getResType("ute"),
+  getResType("uti"),
+  getResType("utm"),
+  getResType("utp"),
+  getResType("uts"),
+  getResType("utt"),
+  getResType("utw"),
+  0.ResType # Also ignore RESTYPE_INVALID
+]
+
 proc allowedToExpose(it: ResRef): bool =
   not GobalResTypeSkipList.contains(it.resType)
 
@@ -82,6 +109,9 @@ proc reindex*(rootDirectory: string,
         resman[it].get().origin
       quit(1)
     allowedToExpose(it)
+
+  let includesClientContents = entriesToExpose.
+    countIt(not GlobalResTypeServerList.contains(it.resType)) > 0
 
   let totalfiles = entriesToExpose.len
 
@@ -228,6 +258,7 @@ proc reindex*(rootDirectory: string,
     "module_name": moduleName,
     "description": moduleDescription,
     "includes_module_contents": withModuleContents.enabled,
+    "includes_client_contents": includesClientContents,
     "total_files": totalfiles,
     "total_bytes": totalbytes,
     "on_disk_bytes": diskbytes,
