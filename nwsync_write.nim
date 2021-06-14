@@ -44,6 +44,8 @@ Options:
                          a module for full distribution.
                          DO NOT USE THIS FOR PERSISTENT WORLDS.
 
+  -n --dry-run           Don't actually touch repository, only simulate checksumming/writing.
+
 When running --with-module:
   --mod-uuid=UUID        The module UUID to save. Required if the module does not
                          have a UUID. Must be a UUIDv4.
@@ -100,6 +102,7 @@ if filesToIndex.len == 0:
   abort "You didn't give me anything to index."
 
 echo reindex(
+  ARGS["--dry-run"],
   root,
   filesToIndex,
   ForceWriteIfExists,

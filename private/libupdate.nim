@@ -80,7 +80,9 @@ proc pathForEntry*(manifest: Manifest, rootDirectory, sha1str: string, create: b
     if create: createDir result
   result = result / sha1str
 
-proc reindex*(rootDirectory: string,
+proc reindex*(
+    dryRun: bool,
+    rootDirectory: string,
     entries: seq[string],
     forceWriteIfExists: bool,
     withModuleContents: WithModuleContents,
@@ -95,9 +97,10 @@ proc reindex*(rootDirectory: string,
   if not dirExists(rootDirectory):
     abort "Target sync directory does not exist."
 
-  createDir(rootDirectory / "manifests")
-  createDir(rootDirectory / "data")
-  createDir(rootDirectory / "data" / "sha1")
+  if not dryRun:
+    createDir(rootDirectory / "manifests")
+    createDir(rootDirectory / "data")
+    createDir(rootDirectory / "data" / "sha1")
 
   info "Reindexing"
   let resman = newResMan(entries, withModuleContents.enabled)
@@ -171,7 +174,7 @@ proc reindex*(rootDirectory: string,
 
   var writtenHashes: CritBitTree[string]
   if forceWriteIfExists:
-    info "Rewirting all data unconditionally"
+    info "Rewriting all data unconditionally"
   else:
     info "Reading existing data in storage"
     writtenHashes = getFilesInStorage(rootDirectory)
@@ -207,9 +210,11 @@ proc reindex*(rootDirectory: string,
     let percent = if divisor > 0: $(clamp(int round(idx.float / divisor), 0, 100)) else: "??"
     let percentPrefix = "[" & percent & "%] "
 
+    var dataWritten: BiggestInt
     if alreadyWrittenOut:
       dedupbytes += size
       debug percentPrefix, "Exists: ", sha1str, " (", $resRef, ")"
+      dataWritten = 0
 
     else:
       # Not in storage yet, write it to disk.
@@ -217,12 +222,18 @@ proc reindex*(rootDirectory: string,
 
       info percentPrefix, "Writing: ", path, " (", $resRef, ")"
 
-      let outstr = openFileStream(path, fmWrite)
-      compress(outstr, data, compressWith, makeMagic("NSYC"))
-      outstr.close()
+      if not dryRun:
+        let outstr = openFileStream(path, fmWrite)
+        compress(outstr, data, compressWith, makeMagic("NSYC"))
+        outstr.close()
+        dataWritten = getFileSize(path)
 
-    let path = pathForEntry(manifest, rootDirectory, sha1str, true)
-    diskbytes += getFileSize(path)
+      else:
+        let outstr = newStringStream()
+        compress(outstr, data, compressWith, makeMagic("NSYC"))
+        dataWritten = outstr.getPosition()
+
+    diskbytes += dataWritten
 
   doAssert(manifest.entries.len == totalfiles)
 
@@ -233,7 +244,7 @@ proc reindex*(rootDirectory: string,
   let newManifestData = strim.readAll()
   let newManifestSha1 = toLowerAscii($secureHash(newManifestData))
 
-  if writeOrigins:
+  if writeOrigins and not dryRun:
     info "Writing origin metadata"
     let originmeta = openFileStream(rootDirectory / "manifests" / newManifestSha1 & ".origin", fmWrite)
     for origin, entries in origins:
@@ -242,14 +253,15 @@ proc reindex*(rootDirectory: string,
         originmeta.write("\t", entry, "\n")
     originmeta.close()
 
-  if updateLatest:
+  if updateLatest and not dryRun:
     if fileExists(rootDirectory / "latest"):
       info "Updating `latest` to point to ", newManifestSha1
     else:
       info "Repository has no `latest`, not creating."
     writefile(rootDirectory / "latest", newManifestSha1)
 
-  writeFile(rootDirectory / "manifests" / newManifestSha1, newManifestData)
+  if not dryRun:
+    writeFile(rootDirectory / "manifests" / newManifestSha1, newManifestData)
 
   var jdata = %*{
     "version": %int manifest.version,
@@ -277,10 +289,13 @@ proc reindex*(rootDirectory: string,
 
   let retinfo = pretty(jdata) & "\c\L"
 
-  writeFile(rootDirectory / "manifests" / newManifestSha1 & ".json", retinfo)
+  if not dryRun:
+      writeFile(rootDirectory / "manifests" / newManifestSha1 & ".json", retinfo)
 
   info "Reindex done, manifest version ", manifest.version, " written: ", newManifestSha1
   info "Manifest contains ", formatsize(totalbytes), " in ", totalfiles, " files"
   info "We wrote ", formatSize(totalbytes - dedupbytes), " of new data"
+  if dryRun:
+    info "** DRY RUN ** NO DATA WRITTEN **"
 
   result = retinfo
