@@ -7,6 +7,7 @@ license       = "MIT"
 
 requires "nim >= 1.4.6"
 requires "neverwinter >= 1.4.2"
+requires "docopt >= 0.6.8"
 
 skipExt = @["nim"]
 binDir = "bin"
