@@ -5,7 +5,7 @@ author        = "Bernhard Stöckner <niv@beamdog.com>"
 description   = "NWSync Repository Management utilities"
 license       = "MIT"
 
-requires "nim >= 1.4.6"
+requires "nim >= 1.4.8"
 requires "neverwinter >= 1.4.2"
 requires "docopt >= 0.6.8"
 
