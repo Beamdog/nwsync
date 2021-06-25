@@ -12,7 +12,7 @@ proc getFilesInStorage*(rootDirectory: string): CritBitTree[string] =
     let ha = extractFilename(entry)
     result[ha] = entry
 
-proc newResMan*(entries: seq[string], includeModContents: bool): ResMan =
+proc newResMan*(entries: seq[string], includeModContents: bool, lookupPaths: seq[string]): ResMan =
   ## Reindexes the given module.
   let resman = newResMan(0)
 
@@ -52,20 +52,24 @@ proc newResMan*(entries: seq[string], includeModContents: bool): ResMan =
         let ifo = erf.demand(newResolvedResRef "module.ifo").readAll(useCache=false)
         let ifogff = readGffRoot(newStringStream(ifo), false)
 
+        # The root dirs of all pathes we look for content.
+        # For haks, we look in: <root>, <root>/hak, <root>/hk
+        # For tlks, we look in: <root>, <root>/tlk
+        let pathRoots = lookupPaths &
+          # We also look in the module parent for convenience
+          pa.dir / ".."
+
         if ifogff.hasField("Mod_HakList", GffList):
           let haklist = ifogff["Mod_HakList", GffList].mapIt(it["Mod_Hak", GffCExoString])
           info "Found ", haklist.len, " haks inside .mod"
 
           # Now we resolve all the mod and hak names from the search path
           for hak in reversed(haklist):
-            # Lookup path for now is hardcoded to be the basic NWN structure.
-            # We first resolve by hk, then by hak.
-            let paths = [
-              pa.dir / ".." / "hk" / hak & ".hak",
-              pa.dir / ".." / "hak" / hak & ".hak",
-              # We also add the current working dir for convenience
-              pa.dir / hak & ".hak",
-            ].filterIt(it.fileExists)
+
+            let hakDirs = (pathRoots &
+                pathRoots.mapIt(it / "hak") &
+                pathRoots.mapIt(it / "hk")).filterIt(it.dirExists)
+            let paths = hakDirs.mapIt(it / hak & ".hak").filterIt(it.fileExists)
 
             if paths.len == 0:
               raise newException(ValueError, "Cannot resolve hak from mod (not found): " & hak)
@@ -81,10 +85,8 @@ proc newResMan*(entries: seq[string], includeModContents: bool): ResMan =
           else: ""
 
         if tlk != "":
-          let paths = [
-            pa.dir / ".." / "tlk" / tlk & ".tlk",
-            pa.dir / tlk & ".tlk"
-          ].filterIt(it.fileExists)
+          let tlkDirs = (pathRoots & pathRoots.mapIt(it / "tlk")).filterIt(it.dirExists)
+          let paths = tlkDirs.mapIt(it / tlk & ".tlk").filterIt(it.fileExists)
 
           if paths.len == 0:
             raise newException(ValueError, "Cannot resolve tlk from mod (not found): " & tlk)

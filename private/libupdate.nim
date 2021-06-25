@@ -91,7 +91,8 @@ proc reindex*(
     additionalStringMeta: openArray[(string, string)],
     additionalIntMeta: openArray[(string, int)],
     limits: Limits,
-    writeOrigins: bool): string =
+    writeOrigins: bool,
+    lookupPaths: seq[string]): string =
   ## Reindexes the given module.
 
   if not dirExists(rootDirectory):
@@ -103,7 +104,7 @@ proc reindex*(
     createDir(rootDirectory / "data" / "sha1")
 
   info "Reindexing"
-  let resman = newResMan(entries, withModuleContents.enabled)
+  let resman = newResMan(entries, withModuleContents.enabled, lookupPaths)
 
   info "Preparing data set to expose"
   let entriesToExpose = toSeq(resman.contents.items).filter do (it: ResRef) -> bool:

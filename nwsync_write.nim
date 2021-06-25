@@ -30,7 +30,7 @@ if the server admin does not specify a hash to serve explicitly.
 
 
 Usage:
-  nwsync_write [options] [--description=D] <root> <spec>...
+  nwsync_write [options] [--path PATH]... [--description=D] <root> <spec>...
   nwsync_write (-h | --help)
   nwsync_write --version
 
@@ -43,6 +43,9 @@ Options:
   --with-module          Include module contents. This is only useful when packing up
                          a module for full distribution.
                          DO NOT USE THIS FOR PERSISTENT WORLDS.
+
+  -p --path PATH...      Add a path to lookup when resolving module.ifo dependencies (haks, tlk).
+                         Can be given multiple times.
 
   -n --dry-run           Don't actually touch repository, only simulate checksumming/writing.
 
@@ -115,4 +118,5 @@ echo reindex(
     ("group_id", GroupId)
   ],
   (fileSize: parseInt($ARGS["--limit-file-size"]).uint64 * 1024 * 1024),
-  ARGS["--write-origins"])
+  ARGS["--write-origins"],
+  @(ARGS["--path"]))
