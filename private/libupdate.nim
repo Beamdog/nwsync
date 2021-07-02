@@ -24,7 +24,11 @@ proc validUUIDv4*(uuid: string): bool =
     uuid[23] == '-' and
     uuid[14] == '4'
 
-let GobalResTypeSkipList = [getResType("nss")]
+let GobalResTypeSkipList = [
+  getResType("nss"),
+  getResType("ndb"),
+  getResType("gic")
+]
 
 # Restypes that are loaded only on the server side.
 # All other restypes are considered to also be needed on the client.
