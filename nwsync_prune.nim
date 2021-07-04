@@ -113,7 +113,7 @@ proc pruneUnreferencedFiles*(rootDirectory: string) =
   let missing = referencedHashes - inStorageHashes
 
   info "Orphans (not referenced, but in storage): ", orphans.len
-  info "Missing (referenced, but in not storage): ", missing.len
+  info "Missing (referenced, but not in storage): ", missing.len
 
   for m in missing:
     let mfh = toSeq(referenced[m].items).
