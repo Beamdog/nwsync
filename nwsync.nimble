@@ -1,6 +1,6 @@
 import sequtils, ospaths, strutils
 
-version       = "0.4.2"
+version       = "0.4.3"
 author        = "Bernhard Stöckner <niv@beamdog.com>"
 description   = "NWSync Repository Management utilities"
 license       = "MIT"
