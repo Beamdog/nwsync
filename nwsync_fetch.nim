@@ -27,7 +27,7 @@ if ARGS["--version"]: handleVersion()
 
 import httpclient, streams, sets
 
-import libmanifest
+import neverwinter/nwsync
 
 let rootDir = $(ARGS["<root>"])
 let baseUrl = $(ARGS["<url>"])

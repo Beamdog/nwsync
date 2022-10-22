@@ -30,7 +30,7 @@ if ARGS["--version"]: handleVersion()
 import os,streams, strutils, logging, critbits, sequtils, sets
 
 import neverwinter/resref
-import libmanifest
+import neverwinter/nwsync
 
 import libshared
 

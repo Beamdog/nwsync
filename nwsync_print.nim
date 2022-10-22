@@ -22,7 +22,7 @@ if ARGS["--version"]: handleVersion()
 
 import logging, streams, strutils, options, os, std/sha1
 
-import libmanifest, libupdate, neverwinter/compressedbuf, neverwinter/resref
+import neverwinter/nwsync, libupdate, neverwinter/compressedbuf, neverwinter/resref
 
 addHandler newFileLogger(stderr, fmtStr = verboseFmtStr)
 setLogFilter(if ARGS["--verbose"]: lvlDebug elif ARGS["--quiet"]: lvlWarn else: lvlInfo)

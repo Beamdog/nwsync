@@ -3,7 +3,7 @@ import options, logging, critbits, std/sha1, strutils, sequtils,
 
 import neverwinter/gff, neverwinter/resman, neverwinter/compressedbuf
 
-import libmanifest
+import neverwinter/nwsync
 import libshared
 import libversion
 
