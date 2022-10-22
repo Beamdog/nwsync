@@ -16,6 +16,13 @@ To build these tools, first install the most recent nim compiler. The suggested 
 
 After nim is installed and available on your path, simply clone this repository and type `nimble build -d:release`.
 
+### Using with docker
+
+```bash
+docker build --rm -t Beamdog/nwsync:dev .
+docker run --rm -w /manifests -v $(pwd):/manifests Beamdog/nwsync:dev nwsync_write --compression="none" nwsync module.mod
+```
+
 ## Documentation
 
 There is a technical user manual available at https://docs.google.com/document/d/1eYRTd6vzk7OrLpr2zlwnUk7mgUsyiZzLoR6k54njBVI.
